@@ -1,5 +1,4 @@
 import axios, { AxiosResponse } from 'axios';
-import { ICatBreed } from '../models/CatBreed'
 
 const instance = axios.create({
     baseURL: "https://api.thecatapi.com/"
