@@ -12,8 +12,7 @@ const request = {
 }
 
 export const CatAPI = {
-    getCatBreeds: (): Promise<ICatBreed[]> => request.get("v1/breeds"),
-    searchCatBreed: (breedId: string): Promise<ICatBreed[]> => request.get(`v1/breeds/search?q=${breedId}`),
-    searchBreedImages: (breedId: string): Promise<ICatBreed[]> => request.get(`v1/images/search?breed_id${breedId}&limit=10&format=png`)
+    getCatBreeds: (): Promise<any[]> => request.get("v1/breeds"),
+    searchBreedImages: (breedId: string, page: number): Promise<any[]> => request.get(`v1/images/search?page=${page}&limit=10&breed_id=${breedId}`)
 }
 

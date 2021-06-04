@@ -1,75 +1,56 @@
-import React, { Component } from 'react';
-import { Container, Row, Col, Form,  Button } from 'react-bootstrap';
+import { Component } from 'react';
+import { Container, Row, Col, Form } from 'react-bootstrap';
 import  Results  from '../components/Results';
 import '../../node_modules/bootstrap/dist/css/bootstrap.min.css';
-import { CatAPI } from '../services/CatAPI';
-import CatContext from '../services/CatContext';
+import CatsContext from '../services/CatsContext';
+import Loader from '../components/sub-components/Loader';
+
+
 
 class Home extends Component {
 
-
     constructor(props){
         super(props);
-
-        this.state = {selectedCat: undefined, catImages: undefined}       
-    }
-
-    handleOnChange(event){
-
-        CatAPI.searchCatBreed(event.target.value)
-        .then(data => {
-
-            console.log(data);
-
-            const cats = data.map((d) => {
-                let cat = null;
-                cat = {
-                        id: d.id,
-                        breedName: d.name,
-                        temperament: d.temperament,
-                        image: d.image,
-                        origin: d.origin,
-                        description: d.description
-                    } 
-                return cat;      
-            });  
-            
-            this.setState({ selectedCat: cats[0] });
-            console.log(this.state.selectedCat);
-            
-        });
-
-        CatAPI.searchBreedImages(event.target.value)
-        .then(data => {
-
-            const catImages = Array.from(new Set(data.map((d) => d.url))) || [];
-           
-            this.setState({ catImages });
-
-        });
+        this.state = {selectedCat: undefined, catImages: undefined, loading: false}      
     }
 
     populateSearchList(data){
 
-        let activeComponent = null;
-          
+        let activeComponent = null;          
         if(data !== undefined && data.length > 0)
         {
             activeComponent = data.map((c) => {
               return  <option key={c.id} value={c.id}>{c.breedName}</option>
             })
-
         }
 
         return activeComponent;
     }
 
+    componentDidMount(){
+
+        const querySplit = window.location.href.split('?');
+
+        if(querySplit.length > 1)
+        {
+            const selectedCat = localStorage.getItem("selectedCat");
+            this.context.changeSelectedCat(selectedCat);
+            this.setState({selectedCat})
+        }
+        else{
+            const selectedCat = "Select Breed"
+            this.context.changeSelectedCat(selectedCat);
+            this.setState({selectedCat: undefined})
+        } 
+    }
 
     render() {
 
-        const catImages = this.state.catImages;
+        const selectedCat = localStorage.getItem("selectedCat");
 
-        return (
+        return (    
+            <CatsContext.Consumer>
+                {({cats, catData, loading, changeSelectedCat}) => (
             <Container fluid>
                 <Row className="justify-content-md-center" class="cat-row">
                     <Col xs lg="2"></Col>
@@ -83,31 +64,33 @@ class Home extends Component {
                 </Row>
                 <Row className="justify-content-md-center cat-row" class="cat-row">
                     <Col xs lg="2">
-                        <CatContext.Consumer>
-                            {context => (
-                                <Form.Control as="select" size="md cat-row" onChange={this.handleOnChange.bind(this)}>
-                                <option>Select Breed</option>
-                                    {this.populateSearchList(context.cats)}
-                                </Form.Control>  
-                            )}                       
-                        </CatContext.Consumer>                                     
+                    <Form.Control as="select" size="md cat-row" value={selectedCat} onChange={changeSelectedCat}>
+                        <option key="Select Breed" value="Select Breed">Select Breed</option>
+                        {this.populateSearchList(cats)}
+                    </Form.Control>  
                     </Col>
                     <Col md="auto"></Col>
                     <Col xs lg="2"></Col>
                 </Row>
-                <Row className="cat-row">
-                    <Col><Results detail="Test" images={catImages} selectedCat={this.state.selectedCat}/></Col>
+                <Row className="cat-row">                     
+                        <Col>
+                            <Loader loading={loading} catData={catData} />
+                        </Col>
                 </Row>
-                <Row>
-                <Row className="justify-content-md-center" class="cat-row">
-                    <Col xs lg="2"><Button>Load More</Button></Col>
-                    <Col md="auto"></Col>
-                    <Col xs lg="2"></Col>
-                </Row>
-                </Row>
+                {/* <Row>
+                    <Row className="justify-content-md-center" class="cat-row">
+                        <Col xs lg="2"><Button>Load More</Button></Col>
+                        <Col md="auto"></Col>
+                        <Col xs lg="2"></Col>
+                    </Row>
+                </Row> */}
             </Container>
-        );
+            )}
+            </CatsContext.Consumer>
+        );   
     }
 }
+
+Home.contextType = CatsContext;
 
 export default Home;
